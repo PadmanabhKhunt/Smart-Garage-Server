@@ -970,6 +970,31 @@
 const path = require("path");
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require('mongoose');
+
+
+
+// Connect to MongoDB
+mongoose.connect('mongodb+srv://Smart_Garage:11221122@cluster0.8kwqlsa.mongodb.net/?retryWrites=true&w=majority', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+const db = mongoose.connection;
+
+db.once('open', () => {
+  console.log('Connected to MongoDB');
+});
+
+// Define user schema
+const userSchema = new mongoose.Schema({
+  username: String,
+  password: String,
+  email: String,
+  isAllowed: { type: Boolean, default: true }, // Add the isAllowed field with a default value of true
+});
+
+
+const User = mongoose.model('User', userSchema);
 
 const app = express();
 const port = 3000;
@@ -978,19 +1003,138 @@ let buttonClicked = false;
 let directButton = false;
 let sensorData = null;
 let randomNumber = null;
-const staticPath = path.join(__dirname, "../public");
+let loraotp = null;
+// const staticPath = path.join(__dirname, "../public");
 
 app.use(bodyParser.json());
-app.use(express.static(staticPath));
+// app.use(express.static(staticPath));
 
-
-app.get("/", (req, res) => {
-  res.send("Hello World!");
+// Serve admin.html
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, '../espserver/public/admin.html'));
 });
+
 
 app.get("/data", (req, res) => {
   res.json(sensorData);
 });
+
+// User management route (admin only)
+app.get('/admin/users', (req, res) => {
+  // Check if user is an admin (you can implement your own logic here)
+  const isAdmin = true; // Placeholder value, replace with your admin check logic
+
+  if (isAdmin) {
+    // Query all users from the database
+    User.find()
+      .then(users => {
+        res.json(users);
+      })
+      .catch(err => {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while fetching users.' });
+      });
+  } else {
+    res.status(403).json({ error: 'Unauthorized access.' });
+  }
+});
+
+
+app.patch('/admin/users/:userId', (req, res) => {
+  const { userId } = req.params;
+  const { isAllowed } = req.body;
+
+  User.findByIdAndUpdate(userId, { isAllowed }, { new: true })
+    .then(updatedUser => {
+      if (!updatedUser) {
+        res.status(404).json({ error: 'User not found.' });
+      } else {
+        res.json(updatedUser);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).json({ error: 'An error occurred while updating the user.' });
+    });
+});
+
+
+// User deletion route (admin only)
+app.delete('/admin/users/:userId', (req, res) => {
+  // Check if user is an admin (you can implement your own logic here)
+  const isAdmin = true; // Placeholder value, replace with your admin check logic
+
+  if (isAdmin) {
+    const userId = req.params.userId;
+
+    User.findByIdAndRemove(userId)
+      .then(deletedUser => {
+        if (deletedUser) {
+          res.json({ message: 'User deleted successfully.' });
+        } else {
+          res.status(404).json({ error: 'User not found.' });
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        res.status(500).json({ error: 'An error occurred while deleting the user.' });
+      });
+  } else {
+    res.status(403).json({ error: 'Unauthorized access.' });
+  }
+});
+
+
+
+app.post('/signup', (req, res) => {
+  const { username, email, password } = req.body;
+
+  User.findOne({ username, email, password })
+    .then(existingUser => {
+      if (existingUser) {
+        res.status(409).json({ error: 'User already exists.' });
+      } else {
+        const newUser = new User({ username, email, password, isAllowed: true }); // Set isAllowed to true
+        newUser.save()
+          .then(savedUser => {
+            res.json(savedUser);
+          })
+          .catch(err => {
+            console.error(err);
+            res.status(500).json({ error: 'An error occurred during signup.' });
+          });
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).json({ error: 'An error occurred during signup.' });
+    });
+});
+
+
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  User.findOne({ username }) // Only search for the username
+    .then(user => {
+      if (!user) {
+        res.status(401).json({ error: 'Invalid username or password.' });
+      } else if (!user.isAllowed) { // Check if user is allowed to login
+        res.status(403).json({ error: 'Access denied. Please contact the administrator.' });
+      } else if (user.password !== password) { // Compare the password
+        res.status(401).json({ error: 'Invalid username or password.' });
+      } else {
+        // Include the isAdmin flag in the response
+        res.json({ isAdmin: user.isAdmin });
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).json({ error: 'An error occurred during login.' });
+    });
+});
+
+
 
 app.post("/data", (req, res) => {
   const { sensor, value } = req.body;
@@ -1022,11 +1166,33 @@ app.get("/api/data", (req, res) => {
   }
 });
 
+app.post('/loraotp', (req, res) => {
+  const { otp } = req.body;
+  console.log('Received OTP:', otp);
+  loraotp = otp;
+  res.json({ message: 'OTP received successfully' });
+});
+
+app.get('/api/loradata', (req, res) => {
+  const otpdata = {
+    otp: loraotp,
+  };
+
+  const jsonData = JSON.stringify(otpdata);
+
+  res.setHeader("Content-Type", "application/json");
+  res.send(jsonData);
+
+});
+
+
+
 app.get("/api/onoff", (req, res) => {
   if (directButton==false) {
     const dataoff = {
       message: 0,
     };
+
 
     const jsonData = JSON.stringify(dataoff);
     res.setHeader("Content-Type", "application/json");
