@@ -975,7 +975,7 @@ const mongoose = require('mongoose');
 mongoose.set('strictQuery', false);
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://Smart_Garage:11221122@cluster0.8kwqlsa.mongodb.net/Smart_Garage?retryWrites=true&w=majority', {
+mongoose.connect('mongodb+srv://garage:garage@garage.vd5xcl0.mongodb.net/garage?retryWrites=true&w=majority', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
