@@ -972,10 +972,10 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require('mongoose');
 
-
+mongoose.set('strictQuery', false);
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://Smart_Garage:11221122@cluster0.8kwqlsa.mongodb.net/?retryWrites=true&w=majority', {
+mongoose.connect('mongodb+srv://Smart_Garage:11221122@cluster0.8kwqlsa.mongodb.net/Smart_Garage?retryWrites=true&w=majority', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
@@ -997,7 +997,7 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 
 const app = express();
-const port = 3000;
+const port = 8080;
 
 let buttonClicked = false;
 let directButton = false;
