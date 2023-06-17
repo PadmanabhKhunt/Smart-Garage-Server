@@ -966,14 +966,11 @@
 
 const path = require("path");
 const express = require("express");
+
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const cors = require("cors");
-app.use(
-  cors({
-    origin: "*",
-  })
-);
+
 
 mongoose.set("strictQuery", false);
 
@@ -1013,7 +1010,11 @@ let loraotp = null;
 
 app.use(bodyParser.json());
 // app.use(express.static(staticPath));
-
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 // Serve admin.html
 app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "../espserver/public/admin.html"));
