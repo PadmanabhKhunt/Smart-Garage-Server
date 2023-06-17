@@ -1007,11 +1007,11 @@ let loraotp = null;
 // const staticPath = path.join(__dirname, "../public");
 
 app.use(bodyParser.json());
-// app.use(express.static(staticPath));
+
 
 // Serve admin.html
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, '../espserver/public/admin.html'));
+  res.sendFile(path.join(__dirname, '../public/admin.html'));
 });
 
 
