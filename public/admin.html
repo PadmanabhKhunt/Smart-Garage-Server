@@ -99,7 +99,7 @@ function deleteUser(userId) {
 
 // Function to handle new user creation form submission
 document.getElementById('createUserForm').addEventListener('submit', function (event) {
-  event.preventDefault();
+  // event.preventDefault();
   const newUsername = document.getElementById('newUsername').value;
   const newPassword = document.getElementById('newPassword').value;
 
@@ -118,7 +118,7 @@ document.getElementById('createUserForm').addEventListener('submit', function (e
 });
 
 // Refresh the user table every 5 seconds (adjust the interval as needed)
-setInterval(getUsers, 5000);
+// setInterval(getUsers, 5000);
 
     </script>
   </div>

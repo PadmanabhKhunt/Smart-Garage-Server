@@ -971,7 +971,6 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
-
 mongoose.set("strictQuery", false);
 
 // Connect to MongoDB
@@ -1006,6 +1005,7 @@ let directButton = false;
 let sensorData = null;
 let randomNumber = null;
 let loraotp = null;
+let otpdata = { otp: null };
 // const staticPath = path.join(__dirname, "../public");
 
 app.use(bodyParser.json());
@@ -1184,14 +1184,18 @@ app.post("/loraotp", (req, res) => {
   const { otp } = req.body;
   console.log("Received OTP:", otp);
   loraotp = otp;
+  otpdata.otp = otp; // Update the otpdata object with the new OTP
   res.json({ message: "OTP received successfully" });
+
+  // Set a timeout of 5 minutes (300,000 milliseconds) to clear the OTP after 5 minutes
+  setTimeout(() => {
+    loraotp = null;
+    otpdata.otp = null;
+    console.log("OTP data cleared after 5 minutes.");
+  }, 300000);
 });
 
 app.get("/api/loradata", (req, res) => {
-  const otpdata = {
-    otp: loraotp,
-  };
-
   const jsonData = JSON.stringify(otpdata);
 
   res.setHeader("Content-Type", "application/json");
